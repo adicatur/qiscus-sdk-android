@@ -36,7 +36,7 @@ ext {
             playService      : "16.0.0",
             firebaseCore     : "16.0.5",
             firebaseMessaging: "17.3.4",
-            okHttp           : "3.9.1",
+            okHttp           : "3.13.0",
             retrofit         : "2.3.0",
 
             nirmana          : "1.2.1",
