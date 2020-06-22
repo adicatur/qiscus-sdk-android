@@ -20,11 +20,14 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-    <application>
+    <application
+        android:requestLegacyExternalStorage="true">
+
 
         <receiver
             android:name=".service.QiscusStartServiceReceiver"
-            android:enabled="true">
+            android:enabled="true"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="com.qiscus.START_SERVICE" />
@@ -33,7 +36,7 @@
         </receiver>
         <receiver
             android:name=".service.QiscusNetworkStateReceiver"
-            android:exported="true"
+            android:exported="false"
             android:label="QiscusNetworkStateReceiver">
             <intent-filter>
                 <action

@@ -99,6 +99,7 @@ public class QiscusComment implements Parcelable {
     private QiscusLocation location;
     private String rawType;
     private String extraPayload;
+    private JSONObject userExtras;
     private JSONObject extras;
     private MediaObserver observer;
     private MediaPlayer player;
@@ -129,6 +130,12 @@ public class QiscusComment implements Parcelable {
         replyTo = in.readParcelable(QiscusComment.class.getClassLoader());
         try {
             extras = new JSONObject(in.readString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            userExtras = new JSONObject(in.readString());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -412,6 +419,14 @@ public class QiscusComment implements Parcelable {
         this.extras = extras;
     }
 
+    public JSONObject getUserExtras() {
+        return userExtras;
+    }
+
+    public void setUserExtras(JSONObject userExtras) {
+        this.userExtras = userExtras;
+    }
+
     public boolean isMyComment() {
         return getSenderEmail().equals(QiscusCore.getQiscusAccount().getEmail());
     }
@@ -451,7 +466,7 @@ public class QiscusComment implements Parcelable {
     }
 
     public boolean isAttachment() {
-        String trimmedMessage = message.trim();
+        String trimmedMessage = message.trim().replaceAll(" ", "");
         return (trimmedMessage.startsWith("[file]") && trimmedMessage.endsWith("[/file]"))
                 || (!TextUtils.isEmpty(rawType) && rawType.equals("file_attachment"));
     }
@@ -497,10 +512,21 @@ public class QiscusComment implements Parcelable {
                 return attachmentName;
             }
 
-            int fileNameEndIndex = message.lastIndexOf(" [/file]");
-            int fileNameBeginIndex = message.lastIndexOf('/', fileNameEndIndex) + 1;
+            int fileNameEndIndex = -1;
+            int fileNameBeginIndex;
+            String fileName;
 
-            String fileName = message.substring(fileNameBeginIndex, fileNameEndIndex);
+            fileNameEndIndex = message.lastIndexOf(" [/file]");
+
+            if (fileNameEndIndex != -1) {
+                fileNameBeginIndex = message.lastIndexOf('/', fileNameEndIndex) + 1;
+                fileName = message.substring(fileNameBeginIndex, fileNameEndIndex);
+            } else {
+                fileNameEndIndex = message.lastIndexOf("[/file]");
+                fileNameBeginIndex = message.lastIndexOf('/', fileNameEndIndex) + 1;
+                fileName = message.substring(fileNameBeginIndex, fileNameEndIndex);
+            }
+
             try {
                 fileName = fileName.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
                 fileName = fileName.replaceAll("\\+", "%2B");
@@ -880,6 +906,15 @@ public class QiscusComment implements Parcelable {
             }
         }
         dest.writeString(extras.toString());
+
+        if (userExtras == null) {
+            try {
+                userExtras = new JSONObject("{}");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        dest.writeString(userExtras.toString());
     }
 
     public boolean areContentsTheSame(QiscusComment qiscusComment) {

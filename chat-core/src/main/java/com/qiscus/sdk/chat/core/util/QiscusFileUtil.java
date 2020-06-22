@@ -50,27 +50,31 @@ public final class QiscusFileUtil {
     }
 
     public static File from(Uri uri) throws IOException {
-        InputStream inputStream = QiscusCore.getApps().getContentResolver().openInputStream(uri);
-        String fileName = getFileName(uri);
-        String[] splitName = splitFileName(fileName);
-        File tempFile = File.createTempFile(splitName[0], splitName[1]);
-        tempFile = rename(tempFile, fileName);
-        tempFile.deleteOnExit();
-        FileOutputStream out = null;
-        try {
-            out = new FileOutputStream(tempFile);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        if (inputStream != null) {
-            copy(inputStream, out);
-            inputStream.close();
-        }
+        if (uri != null) {
+            InputStream inputStream = QiscusCore.getApps().getContentResolver().openInputStream(uri);
+            String fileName = getFileName(uri);
+            String[] splitName = splitFileName(fileName);
+            File tempFile = File.createTempFile(splitName[0], splitName[1]);
+            tempFile = rename(tempFile, fileName);
+            tempFile.deleteOnExit();
+            FileOutputStream out = null;
+            try {
+                out = new FileOutputStream(tempFile);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            if (inputStream != null) {
+                copy(inputStream, out);
+                inputStream.close();
+            }
 
-        if (out != null) {
-            out.close();
+            if (out != null) {
+                out.close();
+            }
+            return tempFile;
+        } else {
+            throw new IOException("File Uri is Null, Please check your implementation");
         }
-        return tempFile;
     }
 
     public static File from(InputStream inputStream, String fileName) throws IOException {
@@ -253,5 +257,38 @@ public final class QiscusFileUtil {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         mediaScanIntent.setData(Uri.fromFile(file));
         QiscusCore.getApps().sendBroadcast(mediaScanIntent);
+    }
+
+    public static String getThumbnailURL(String url) {
+        return getThumbnailURL(url, 320, 320, 0);
+    }
+
+    public static String getBlurryThumbnailURL(String url) {
+        return getThumbnailURL(url, 320, 320, 300);
+    }
+
+    private static String getThumbnailURL(String url, int width, int height, int blur) {
+        if (url == null) {
+            return null;
+        }
+
+        int i = url.indexOf("upload/");
+        if (i > 0) {
+            i += 7;
+            String thumbnailUrl = url.substring(0, i);
+
+            if (blur == 300) {
+                thumbnailUrl += "w_" + width + ",h_" + height + ",c_limit,e_blur:" + blur + "/";
+            } else {
+                thumbnailUrl += "w_" + width + ",h_" + height + ",c_limit" + "/";
+            }
+            String file = url.substring(i);
+            i = file.lastIndexOf('.');
+            if (i > 0) {
+                file = file.substring(0, i);
+            }
+            return thumbnailUrl + file + ".png";
+        }
+        return url;
     }
 }
